@@ -1,0 +1,51 @@
+Class weights: tensor([0.2440, 0.3780, 0.3780])
+Starting training...
+GPU: NVIDIA GeForce RTX 4050 Laptop GPU
+VRAM: 6.4GB
+Writing model shards: 100%|███████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  2.95it/s]
+{'loss': '1.113', 'grad_norm': '3.964', 'learning_rate': '1.924e-05', 'epoch': '0.1266'}
+{'loss': '1.023', 'grad_norm': '4.498', 'learning_rate': '1.84e-05', 'epoch': '0.2532'}
+{'loss': '0.9108', 'grad_norm': '6.428', 'learning_rate': '1.755e-05', 'epoch': '0.3797'}
+{'loss': '0.7591', 'grad_norm': '6.245', 'learning_rate': '1.671e-05', 'epoch': '0.5063'}
+{'loss': '0.8402', 'grad_norm': '6.178', 'learning_rate': '1.586e-05', 'epoch': '0.6329'}
+{'loss': '0.6727', 'grad_norm': '4.073', 'learning_rate': '1.502e-05', 'epoch': '0.7595'}
+{'loss': '0.5452', 'grad_norm': '6.381', 'learning_rate': '1.426e-05', 'epoch': '0.8861'}
+Writing model shards: 100%|███████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  2.42it/s]
+{'eval_loss': '0.4221', 'eval_f1': '0.8483', 'eval_runtime': '0.2859', 'eval_samples_per_second': '276.4', 'eval_steps_per_second': '34.98', 'epoch': '1'}
+{'loss': '0.5183', 'grad_norm': '5.518', 'learning_rate': '1.342e-05', 'epoch': '1.013'}
+{'loss': '0.416', 'grad_norm': '2.495', 'learning_rate': '1.257e-05', 'epoch': '1.139'}
+{'loss': '0.4716', 'grad_norm': '6.561', 'learning_rate': '1.173e-05', 'epoch': '1.266'}
+{'loss': '0.4741', 'grad_norm': '5.19', 'learning_rate': '1.089e-05', 'epoch': '1.392'}
+{'loss': '0.4367', 'grad_norm': '5.542', 'learning_rate': '1.004e-05', 'epoch': '1.519'}
+{'loss': '0.2669', 'grad_norm': '1.92', 'learning_rate': '9.198e-06', 'epoch': '1.646'}
+{'loss': '0.271', 'grad_norm': '4.487', 'learning_rate': '8.354e-06', 'epoch': '1.772'}
+{'loss': '0.3751', 'grad_norm': '7.108', 'learning_rate': '7.511e-06', 'epoch': '1.899'}
+Writing model shards: 100%|███████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  3.23it/s]
+{'eval_loss': '0.3057', 'eval_f1': '0.8755', 'eval_runtime': '0.3203', 'eval_samples_per_second': '246.6', 'eval_steps_per_second': '31.22', 'epoch': '2'}
+{'loss': '0.4023', 'grad_norm': '3.133', 'learning_rate': '6.667e-06', 'epoch': '2.025'}
+{'loss': '0.3972', 'grad_norm': '3.031', 'learning_rate': '5.823e-06', 'epoch': '2.152'}
+{'loss': '0.3512', 'grad_norm': '1.906', 'learning_rate': '4.979e-06', 'epoch': '2.278'}
+{'loss': '0.378', 'grad_norm': '5.211', 'learning_rate': '4.135e-06', 'epoch': '2.405'}
+{'loss': '0.2631', 'grad_norm': '1.162', 'learning_rate': '3.291e-06', 'epoch': '2.532'}
+{'loss': '0.2705', 'grad_norm': '5.57', 'learning_rate': '2.447e-06', 'epoch': '2.658'}
+{'loss': '0.3445', 'grad_norm': '2.943', 'learning_rate': '1.603e-06', 'epoch': '2.785'}
+{'loss': '0.3546', 'grad_norm': '6.323', 'learning_rate': '7.595e-07', 'epoch': '2.911'}
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 237/237 [00:42<00:00,  5.62it/s]
+{'eval_loss': '0.2917', 'eval_f1': '0.8755', 'eval_runtime': '0.2651', 'eval_samples_per_second': '298', 'eval_steps_per_second': '37.72', 'epoch': '3'}
+{'train_runtime': '41.79', 'train_samples_per_second': '45.23', 'train_steps_per_second': '5.672', 'train_loss': '0.5091', 'epoch': '3'}
+
+Evaluating on test set...
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:00<00:00, 57.01it/s]
+              precision    recall  f1-score   support
+
+    critical       1.00      0.86      0.92        35
+      medium       0.69      1.00      0.81        22
+         low       1.00      0.77      0.87        22
+
+    accuracy                           0.87        79
+   macro avg       0.90      0.88      0.87        79
+weighted avg       0.91      0.87      0.88        79
+
+Saving model...
+Writing model shards: 100%|███████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  2.97it/s]
+Model saved to models/codebert-finetuned
