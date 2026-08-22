@@ -16,6 +16,16 @@ class Bug:
     description: str
     fix: str
 
+def clean_llm_response(content: str) -> str:
+    content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+    content = re.sub(r'```json|```', '', content)
+    content = content.strip()
+    start = content.find('[')
+    end = content.rfind(']') + 1
+    if start != -1 and end > start:
+        content = content[start:end]
+    return content
+
 class BugDetectorAgent:
     def __init__(self, model: str):
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -27,9 +37,8 @@ class BugDetectorAgent:
 Code to review:
 {code}
 
-Return ONLY a JSON array. No markdown. No explanation. Just JSON.
+Return ONLY a JSON array. No markdown. No explanation. No thinking. Just JSON.
 Format: [{{"line": 1, "severity": "critical", "category": "security", "description": "explain bug", "fix": "how to fix"}}]
-
 Find at least 3 issues if they exist. Return [] only if code is perfect."""
 
         try:
@@ -38,7 +47,7 @@ Find at least 3 issues if they exist. Return [] only if code is perfect."""
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a senior code reviewer. You ONLY output valid JSON arrays. Never use markdown. Never explain. Just output the JSON array directly."
+                        "content": "You are a senior code reviewer. Output ONLY valid JSON arrays. No thinking tags. No markdown. Just the JSON array."
                     },
                     {
                         "role": "user",
@@ -49,24 +58,14 @@ Find at least 3 issues if they exist. Return [] only if code is perfect."""
                 temperature=0.1
             )
 
-            content = response.choices[0].message.content.strip()
-            print(f"Raw response: {content[:200]}")
-
-            # Clean response
-            content = re.sub(r'```json|```', '', content).strip()
-
-            # Find JSON array in response
-            start = content.find('[')
-            end = content.rfind(']') + 1
-            if start != -1 and end > start:
-                content = content[start:end]
-
-            bugs_data = json.loads(content)
-            return [Bug(**b) for b in bugs_data]
+            content = response.choices[0].message.content
+            cleaned = clean_llm_response(content)
+            bugs_data = json.loads(cleaned)
+            return [Bug(**b) for b in bugs_data if isinstance(b, dict)]
 
         except json.JSONDecodeError as e:
             print(f"JSON parse error: {e}")
-            print(f"Content was: {content}")
+            print(f"Cleaned content: {cleaned[:300]}")
             return []
         except Exception as e:
             print(f"Bug detection error: {e}")

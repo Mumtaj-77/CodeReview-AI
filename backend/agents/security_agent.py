@@ -88,6 +88,8 @@ Return [] if no security issues found."""
             )
 
             content = response.choices[0].message.content.strip()
+            # Remove thinking tags
+            content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
             content = re.sub(r'```json|```', '', content).strip()
             start = content.find('[')
             end = content.rfind(']') + 1
@@ -134,7 +136,7 @@ def load_data(filename):
 url = "http://api.example.com/data"
 """
 
-    scanner = SecurityScannerAgent(model="openai/gpt-oss-20b")
+    scanner = SecurityScannerAgent(model="groq/compound-mini")
     issues = scanner.scan(test_code)
 
     print(f"Found {len(issues)} security issues:\n")

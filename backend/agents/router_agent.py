@@ -4,8 +4,9 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from dataclasses import dataclass
 from typing import Literal
 
-FAST_MODEL = "openai/gpt-oss-20b"
-POWERFUL_MODEL = "qwen/qwen3.6-27b"
+FAST_MODEL = "groq/compound-mini"
+POWERFUL_MODEL = "groq/compound-mini"
+
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "codebert-finetuned")
