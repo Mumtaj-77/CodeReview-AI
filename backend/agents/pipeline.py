@@ -76,6 +76,7 @@ def explain_node(state: ReviewState) -> ReviewState:
     for fix in state["fixes"]:
         exp = explainer.explain(fix.original, fix.fixed)
         explanations.append(exp)
+        time.sleep(1)
     return {**state, "explanations": explanations}
 
 def report_node(state: ReviewState) -> ReviewState:

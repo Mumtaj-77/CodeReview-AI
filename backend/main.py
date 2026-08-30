@@ -2,7 +2,7 @@ import sys
 import os
 import time
 import uuid
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -10,7 +10,7 @@ from typing import Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.database.connection import create_tables, get_db
+from backend.database.connection import create_tables, get_db, SessionLocal
 from backend.database.models import Review, BugRecord
 from backend.agents.pipeline import build_pipeline, ReviewState
 
@@ -28,10 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Build pipeline once at startup
 pipeline = build_pipeline()
-
-# In-memory job store
 jobs = {}
 
 @app.on_event("startup")
@@ -41,11 +38,7 @@ def startup():
 
 @app.get("/")
 def root():
-    return {
-        "project": "CodeReview AI",
-        "status": "running",
-        "version": "1.0.0"
-    }
+    return {"project": "CodeReview AI", "status": "running", "version": "1.0.0"}
 
 @app.get("/health")
 def health():
@@ -56,29 +49,34 @@ class CodeRequest(BaseModel):
     filename: Optional[str] = "code.py"
 
 @app.post("/review")
-async def create_review(
-    request: CodeRequest,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
-):
+async def create_review(request: CodeRequest, background_tasks: BackgroundTasks):
     job_id = str(uuid.uuid4())
     jobs[job_id] = {"status": "processing", "report": None}
+    background_tasks.add_task(run_review, job_id=job_id, code=request.code, filename=request.filename)
+    return {"job_id": job_id, "status": "processing", "message": "Review started."}
 
-    background_tasks.add_task(
-        run_review,
-        job_id=job_id,
-        code=request.code,
-        filename=request.filename,
-        db=db
-    )
+@app.post("/upload")
+async def upload_file(file: UploadFile, background_tasks: BackgroundTasks):
+    allowed = ['.py', '.js', '.java', '.ts', '.cpp', '.cs', '.go', '.rb', '.php']
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type: {ext}. Allowed: {', '.join(allowed)}"
+        )
+    content = await file.read()
+    try:
+        code = content.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="File must be UTF-8 encoded text")
 
-    return {
-        "job_id": job_id,
-        "status": "processing",
-        "message": "Review started. Poll /review/{job_id} for results."
-    }
+    job_id = str(uuid.uuid4())
+    jobs[job_id] = {"status": "processing", "report": None}
+    background_tasks.add_task(run_review, job_id=job_id, code=code, filename=file.filename)
+    return {"job_id": job_id, "status": "processing", "filename": file.filename}
 
-async def run_review(job_id: str, code: str, filename: str, db: Session):
+async def run_review(job_id: str, code: str, filename: str):
+    db = SessionLocal()
     try:
         initial_state = ReviewState(
             code=code,
@@ -95,7 +93,6 @@ async def run_review(job_id: str, code: str, filename: str, db: Session):
         result = pipeline.invoke(initial_state)
         report = result["report"]
 
-        # Save to DB
         review = Review(
             code=code,
             language=report["summary"]["language"],
@@ -113,17 +110,15 @@ async def run_review(job_id: str, code: str, filename: str, db: Session):
         db.commit()
         db.refresh(review)
 
-        # Save bugs
         for bug in report["bugs"]:
-            bug_record = BugRecord(
+            db.add(BugRecord(
                 review_id=review.id,
                 line=bug["line"],
                 severity=bug["severity"],
                 category=bug["category"],
                 description=bug["description"],
                 fix=bug["fix"]
-            )
-            db.add(bug_record)
+            ))
         db.commit()
 
         jobs[job_id] = {
@@ -135,6 +130,10 @@ async def run_review(job_id: str, code: str, filename: str, db: Session):
     except Exception as e:
         jobs[job_id] = {"status": "failed", "error": str(e)}
         print(f"Review failed: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        db.close()
 
 @app.get("/review/{job_id}")
 def get_review(job_id: str):
@@ -165,7 +164,6 @@ def get_metrics(db: Session = Depends(get_db)):
     reviews = db.query(Review).all()
     avg_time = sum(r.review_time or 0 for r in reviews) / max(total, 1)
     total_bugs = sum(r.total_bugs or 0 for r in reviews)
-
     return {
         "total_reviews": total,
         "total_bugs_found": total_bugs,

@@ -1,4 +1,5 @@
 import os
+import time
 from groq import Groq
 from dotenv import load_dotenv
 from dataclasses import dataclass
@@ -97,21 +98,25 @@ Bug: {bug_description}
 Fix: {fix}
 Be clear, educational, and encouraging."""
 
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a patient senior developer teaching juniors."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=200,
-                temperature=0.3
-            )
-            content = response.choices[0].message.content
-            content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
-            return content.strip()
-        except Exception as e:
-            return f"Explanation unavailable: {e}"
+        for attempt in range(3):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": "You are a patient senior developer teaching juniors."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=150,
+                    temperature=0.3
+                )
+                content = response.choices[0].message.content
+                content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+                return content.strip()
+            except Exception as e:
+                if "429" in str(e) and attempt < 2:
+                    time.sleep(5)
+                    continue
+                return "Apply the fix shown above."
 
 
 # ── Test ──

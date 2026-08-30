@@ -1,5 +1,6 @@
 import ast
 import re
+import os
 from dataclasses import dataclass
 from typing import List, Dict, Any
 
@@ -13,13 +14,35 @@ class ParsedCode:
     complexity: int
     raw_code: str
 
-def detect_language(code: str) -> str:
+def detect_language(code: str, filename: str = "") -> str:
+    ext_map = {
+        '.py': 'python', '.js': 'javascript', '.ts': 'typescript',
+        '.java': 'java', '.cpp': 'cpp', '.cs': 'csharp',
+        '.go': 'go', '.rb': 'ruby', '.php': 'php'
+    }
+    if filename:
+        ext = os.path.splitext(filename)[1].lower()
+        if ext in ext_map:
+            return ext_map[ext]
+
     if "def " in code or "import " in code or "print(" in code:
         return "python"
+    elif "interface " in code or ": string" in code or ": number" in code:
+        return "typescript"
     elif "function " in code or "const " in code or "let " in code:
         return "javascript"
     elif "public class" in code or "System.out" in code:
         return "java"
+    elif "#include" in code or "cout <<" in code:
+        return "cpp"
+    elif "namespace " in code or "Console.Write" in code:
+        return "csharp"
+    elif "func " in code or "fmt.Println" in code:
+        return "go"
+    elif "def " in code and "end" in code:
+        return "ruby"
+    elif "<?php" in code or "echo " in code:
+        return "php"
     return "python"  # default
 
 def calculate_complexity(code: str) -> int:
