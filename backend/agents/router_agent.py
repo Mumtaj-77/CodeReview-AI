@@ -9,7 +9,9 @@ POWERFUL_MODEL = "groq/compound-mini"
 
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MODEL_PATH = os.path.join(BASE_DIR, "models", "codebert-finetuned")
+LOCAL_MODEL = os.path.join(BASE_DIR, "models", "codebert-finetuned")
+HF_MODEL = "Mumtaj-Shaikh/codereview-codebert"
+MODEL_PATH = LOCAL_MODEL if os.path.exists(LOCAL_MODEL) else HF_MODEL
 
 @dataclass
 class RouteDecision:
